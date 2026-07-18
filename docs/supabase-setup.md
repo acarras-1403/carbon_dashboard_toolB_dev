@@ -81,6 +81,22 @@ database or CSV edit outside the app (D-7).
 
 RLS: anon `SELECT` only. No insert/update/delete policies exist.
 
+**Status:** created and seeded (4 rows), all sourced from `DEFRA_factorsbyCategory_2025`
+in `Emission Factors database 2025_reduced (1).xlsx` (native tonnes/litres factors;
+LPG's native tonnes factor divided by 1000 to express per kg, matching Tool A's
+`activity_data_unit_converted` for that source — see each row's `notes`):
+
+| emission_source | scope | category | subcategory | emission_basis | ef_value | ef_unit |
+|---|---|---|---|---|---|---|
+| src_diesel_stationary | Scope 1 | Stationary Combustion | Liquid Fuels | direct_combustion | 2.57082 | litres |
+| src_diesel_stationary | Scope 3 | Fuel- and Energy-Related Activities (WTT) | Liquid Fuels | upstream_WTT | 0.61101 | litres |
+| src_diesel_mobile | Scope 1 | Mobile Combustion | Liquid Fuels | direct_combustion | 2.57082 | litres |
+| src_lpg_stationary | Scope 1 | Stationary Combustion | Gaseous Fuels | direct_combustion | 2.93936095 | kg |
+
+Grid Electricity (location-based/market-based Scope 2) is **not** seeded — no
+current `activity_data` uses it, and sourcing correct country-specific grid +
+residual-mix factors is deferred (see PROGRESS.md).
+
 ### `expected_matches`
 
 Declares which `emission_source` values are multi-linkage (expected to fan out into
@@ -93,6 +109,10 @@ single match.
 | expected_emission_basis | text | e.g. `direct_combustion`, `upstream_WTT` |
 
 RLS: anon `SELECT` only. No insert/update/delete policies exist.
+
+**Status:** created and seeded (2 rows) — `src_diesel_stationary` expects both
+`direct_combustion` and `upstream_WTT`. The other two seeded emission sources have
+no rows here, so they're expected single-match.
 
 ### `emissions_results`
 
@@ -134,5 +154,6 @@ higher number" and with `ef_table.quality_level`'s own 5=best/1=worst convention
 
 ---
 
-**Last updated:** 2026-07-18 — Tool B session 1 (initial reconstruction from live
-schema; new tables not yet created — see PROGRESS.md for build status).
+**Last updated:** 2026-07-18 — Tool B session 1: `ef_table`, `expected_matches`,
+`emissions_results` created with RLS and seeded (see PROGRESS.md for full build
+status).
