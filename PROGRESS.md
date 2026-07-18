@@ -4,9 +4,9 @@
 > anything. Update it at every save point. Replace content — do not append.
 > History lives in git.
 
-**Session:** 1 — build complete, not yet deployed
+**Session:** 1 — build complete and deployed
 **Last updated:** 2026-07-18 — end of session 1
-**Live URL:** none yet — Netlify site not connected
+**Live URL:** https://ghgdashboarddev.netlify.app — deployed from `main` @ `159d67e`, build succeeded, secret scan clean
 
 ## Current state
 Full build complete and locally verified. Database: `ef_table`, `expected_matches`,
@@ -30,21 +30,25 @@ exports both fetch a fresh unfiltered dataset, independent of on-screen state.
 `docs/supabase-setup.md` documents all 5 tables, RLS, and the seed contents.
 `.claude/skills/c-more/` installed.
 
-**Not yet done:** Netlify site connection and env vars (manual step, see Remaining
-work), and a live click-through against the real Supabase project once that
-network path is available (see Known issues — this sandbox's egress policy
-blocked direct browser/Node access to the Supabase host).
+**Deployed:** the builder connected this repo to the Netlify site `ghgdashboarddev`
+and entered `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. Netlify's production
+branch is `main`; `claude/tool-build-41aj2c` (this session's dev branch, containing
+the full build) was fast-forward merged into `main` and pushed so Netlify had
+something to build (main previously had only the pre-build markdown/spec files —
+that's why the site's first deploy attempts produced no ready build). Confirmed via
+Netlify MCP: deploy `6a5b4ea63063800007d02632`, commit `159d67e`, branch `main`,
+context `production`, state `ready`, secret scan clean (0 matches across 34 files).
+Live at https://ghgdashboarddev.netlify.app.
 
 ## Last session
-Session 1 (this one) — full build, start to finish. First Session Setup, schema +
-RLS + seed data, Vite/React/Tailwind scaffold, calculation engine, dashboard UI,
-CSV/PDF export, and an extensive local test pass (see Build decisions and Known
-issues for what was and wasn't testable in this environment).
+Session 1 (this one) — full build, start to finish, plus deploy. First Session
+Setup, schema + RLS + seed data, Vite/React/Tailwind scaffold, calculation engine,
+dashboard UI, CSV/PDF export, an extensive local test pass, merging the dev branch
+to `main`, and confirming the Netlify deploy went out clean.
 
 ## Remaining work
-- [ ] Deploy to Netlify — builder connects this repo to a new Netlify site and enters `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in that site's dashboard (Netlify MCP is not active for this project)
-- [ ] Once deployed (or once a network path to the live Supabase project is available), do one real click-through: load the dashboard against production data, click Recalculate, confirm the 10 real activity rows produce the expected 11 emissions_results rows (9 real + the src_diesel_stationary fan-out), and exercise CSV/PDF downloads against real data — this session verified the same logic and UI thoroughly, but never against the live database end-to-end (see Known issues)
-- [ ] Acceptance criteria walkthrough (product-spec.md Section 13) was completed for everything testable pre-deploy (see Build decisions below for the summary) — criteria #1, #19, #20 (reachable at a live Netlify URL, deploys successfully) remain open until deploy happens
+- [ ] A real click-through against the **live, deployed** site with the real Supabase project: load the dashboard, click Recalculate, confirm the 10 real activity rows produce the expected 11 emissions_results rows (9 real + the src_diesel_stationary fan-out), and exercise CSV/PDF downloads — this session verified the same logic and UI thoroughly via unit tests and mocked-network UI tests (see Known issues for why), but never against the live database end-to-end. Now that the site is deployed, this is straightforward to do from a real browser outside this sandbox.
+- [ ] Acceptance criteria #1, #19, #20 (reachable at a live Netlify URL with no login gate, loads on desktop/mobile, Netlify build succeeds) — now satisfied: site is live, build succeeded, no auth gate exists in the code. Worth a quick manual confirmation on an actual phone/desktop browser.
 
 ## Build decisions
 - **data_quality_rating → score mapping**: measured=5, calculated=4, estimated=2, proxy=1 (higher = better), per `docs/purepastures-ef-calc-schema-final.md` §4. Note: an earlier chat message from the builder proposed the inverted scale (measured=1/best, estimated=4-5/worst) — the uploaded schema doc's explicit table was treated as authoritative since it's the confirmed design artifact, not the offhand chat scale. Flagging here in case this should be revisited.
