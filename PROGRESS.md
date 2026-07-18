@@ -6,7 +6,7 @@
 
 **Session:** 1 — build complete and deployed
 **Last updated:** 2026-07-18 — end of session 1
-**Live URL:** https://ghgdashboarddev.netlify.app — deployed from `main` @ `159d67e`, build succeeded, secret scan clean
+**Live URL:** https://ghgdashboarddev.netlify.app — deployed from `main` @ `77d6c72`, build succeeded, secret scan clean, VITE_SUPABASE_URL typo fixed (see Known issues)
 
 ## Current state
 Full build complete and locally verified. Database: `ef_table`, `expected_matches`,
@@ -65,6 +65,7 @@ to `main`, and confirming the Netlify deploy went out clean.
 - Grid Electricity (Scope 2 location/market-based multi-linkage example) has no ef_table rows yet — deferred, see Build decisions above.
 - **This sandbox's outbound network policy blocks direct browser/Node HTTPS access to the `purepastures` Supabase project host** (confirmed via the agent-proxy's own diagnostic endpoint: a 403 policy denial on `ztkgbowwrlszbbfuhkid.supabase.co`), even though the Supabase MCP tool itself (a separate, allowed channel) worked fine throughout for schema/data work. Consequence: the calculation engine, dashboard, and exports were verified thoroughly but not end-to-end against the live database — instead: (1) the pure match/fan-out/no-match/partial-match/unit-reconciliation/result_tco2e/confidence_score/forecast logic was unit-tested directly against the real seeded `ef_table` rows and the real 10 `activity_data` rows (30/30 checks passing, including hand-verified arithmetic); (2) the full UI (filters, expand/collapse, quality tags, hover detail, validation_status cycling, forecast banner) and both exports were verified by mocking the Supabase REST responses at the network layer with the same real data shapes, and screenshotting/inspecting the actual rendered output (this caught and fixed three real bugs: a CSV column-dropping bug in the forecast section, and two PDF bugs — invisible white-on-dark table headers and a clipped chart label). A live click-through against the actual database is still recommended once deployed or once that network path is available — see Remaining work.
 - `npm run build` succeeds with a "chunk larger than 500kB" warning (mostly jsPDF) — not addressed, since this is an internal dashboard tool where a code-split wouldn't meaningfully change the experience.
+- **Post-deploy bug, fixed**: the live site initially showed "Error loading data: TypeError: Failed to fetch" — `VITE_SUPABASE_URL` was set in Netlify as `https://ztkgbowwrlszbbfuhkid.supabase.com` (`.com`) instead of `.co`. Found by reading the site's env vars directly via Netlify MCP, corrected via the same tool, then triggered a rebuild (an empty commit, since Vite bakes `VITE_*` vars in at build time — changing the env var alone doesn't affect an already-built deploy). Confirmed the new deploy (commit `77d6c72`) built after the fix, ready, clean secret scan.
 
 ## Notes for next session
 None — this session's build is complete. Next session (whenever it happens) should
