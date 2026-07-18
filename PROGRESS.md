@@ -4,47 +4,65 @@
 > anything. Update it at every save point. Replace content — do not append.
 > History lives in git.
 
-**Session:** 1 — build in progress
-**Last updated:** 2026-07-18 — mid-session 1
-**Live URL:** none yet
+**Session:** 1 — build complete, not yet deployed
+**Last updated:** 2026-07-18 — end of session 1
+**Live URL:** none yet — Netlify site not connected
 
 ## Current state
-Database and reference data are live: `ef_table`, `expected_matches`,
-`emissions_results` created in the shared `purepastures` Supabase project
-(`ztkgbowwrlszbbfuhkid`) with RLS exactly per CLAUDE.md, and seeded with real DEFRA
-2025 factors for the 3 emission sources that actually appear in Tool A's activity
-data today (`src_diesel_stationary` — multi-linkage, direct combustion + Scope 3
-WTT; `src_diesel_mobile`; `src_lpg_stationary`). `docs/` created; `product-spec.md`
-and the two companion design docs moved in; `docs/supabase-setup.md` reconstructed
-from live-schema inspection (a copy of Tool A's version wasn't in this repo at
-session start) and now documents all 5 tables + the seed contents. `.claude/skills/c-more/`
-installed from the uploaded `C-MORE-brand-style-sheet.md`. Frontend (Vite/React app,
-calculation engine, dashboard, exports) not yet built.
+Full build complete and locally verified. Database: `ef_table`, `expected_matches`,
+`emissions_results` live in the shared `purepastures` Supabase project
+(`ztkgbowwrlszbbfuhkid`) with RLS exactly per CLAUDE.md, seeded with real DEFRA 2025
+factors for the 3 emission sources that appear in Tool A's activity data today
+(`src_diesel_stationary` — multi-linkage, direct combustion + Scope 3 WTT;
+`src_diesel_mobile`; `src_lpg_stationary`). Frontend: Vite + React + Tailwind v4 app
+in place (`/src/lib`, `/src/components`), Supabase client via `VITE_SUPABASE_URL`/
+`VITE_SUPABASE_ANON_KEY`. Calculation engine (`src/lib/matching.js` — pure logic;
+`src/lib/calculationEngine.js` — Supabase I/O) implements match → fan-out →
+no-match/partial-match → unit reconciliation → result_tco2e → confidence_score,
+firing only on the dashboard's manual "Recalculate" button. Dashboard
+(`src/components/Dashboard.jsx` + `Filters`/`ScopeTree`/`ResultRow`/`ForecastPanel`/
+`QualityTag`) implements facility/year filters, the Scope 1/2/3 + Unclassified
+breakdown tree with independent Scope/Category collapse, 1–5 color-coded confidence
+tags (dataviz skill's fixed status palette), hover detail, per-row validation_status
+cycling, and the run-rate forecast panel with a suppressed-months warning banner.
+CSV (`src/lib/csvExport.js`) and PDF (`src/lib/pdfExport.js`, five fixed sections)
+exports both fetch a fresh unfiltered dataset, independent of on-screen state.
+`docs/supabase-setup.md` documents all 5 tables, RLS, and the seed contents.
+`.claude/skills/c-more/` installed.
+
+**Not yet done:** Netlify site connection and env vars (manual step, see Remaining
+work), and a live click-through against the real Supabase project once that
+network path is available (see Known issues — this sandbox's egress policy
+blocked direct browser/Node access to the Supabase host).
 
 ## Last session
-Session 1, in progress — see Current state above.
+Session 1 (this one) — full build, start to finish. First Session Setup, schema +
+RLS + seed data, Vite/React/Tailwind scaffold, calculation engine, dashboard UI,
+CSV/PDF export, and an extensive local test pass (see Build decisions and Known
+issues for what was and wasn't testable in this environment).
 
 ## Remaining work
-- [ ] Scaffold the Vite + React + Tailwind app (`/src/lib`, `/src/components`), Supabase client via Netlify env vars
-- [ ] Build the manual "Recalculate" button and calculation engine (match / fan-out / no-match / partial-match / unit reconciliation / result_tco2e / confidence_score) — never auto-fires
-- [ ] Build the Emissions Dashboard view — filters, Scope 1/2/3 + Unclassified breakdown tree, hover detail, per-row validation_status toggle, run-rate forecast panel with warning banner
-- [ ] Wire CSV export — full granular breakdown plus forecast figures, always all persisted records, independent of on-screen filters
-- [ ] Wire PDF export — five-section C-MORE branded report, independent of on-screen filter/expand state
-- [ ] Local test pass — full walkthrough including multi-linkage fan-out, zero-match Unclassified (needs a manual throwaway activity_data row — no real data produces this today), partial-match nesting, forecast with the real 10 rows, validation_status toggle persisting across reload
-- [ ] Acceptance criteria pass — verify all 20 criteria in product-spec.md Section 13 before deploy
-- [ ] Deploy to Netlify — builder enters VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in this tool's own Netlify site dashboard
+- [ ] Deploy to Netlify — builder connects this repo to a new Netlify site and enters `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in that site's dashboard (Netlify MCP is not active for this project)
+- [ ] Once deployed (or once a network path to the live Supabase project is available), do one real click-through: load the dashboard against production data, click Recalculate, confirm the 10 real activity rows produce the expected 11 emissions_results rows (9 real + the src_diesel_stationary fan-out), and exercise CSV/PDF downloads against real data — this session verified the same logic and UI thoroughly, but never against the live database end-to-end (see Known issues)
+- [ ] Acceptance criteria walkthrough (product-spec.md Section 13) was completed for everything testable pre-deploy (see Build decisions below for the summary) — criteria #1, #19, #20 (reachable at a live Netlify URL, deploys successfully) remain open until deploy happens
 
 ## Build decisions
 - **data_quality_rating → score mapping**: measured=5, calculated=4, estimated=2, proxy=1 (higher = better), per `docs/purepastures-ef-calc-schema-final.md` §4. Note: an earlier chat message from the builder proposed the inverted scale (measured=1/best, estimated=4-5/worst) — the uploaded schema doc's explicit table was treated as authoritative since it's the confirmed design artifact, not the offhand chat scale. Flagging here in case this should be revisited.
 - **EF seed data sourcing**: the uploaded xlsx is a large multi-tab reference database, not a pre-shaped seed file. Seeded rows are traced to specific rows in its `DEFRA_factorsbyCategory_2025` tab (litres/tonnes-based DEFRA 2025 factors), not the curated "Emission Factors 2025" summary sheet (which lacks the litres/kg stationary-combustion factors needed here). LPG's factor was derived by dividing DEFRA's native tonnes-basis value by 1000 to match Tool A's kg-based storage for that source — arithmetic unit conversion, not an invented factor.
 - **Grid Electricity not seeded**: no current activity_data uses it, and correctly sourcing country-specific grid + residual-mix (location-based/market-based) factors from the xlsx is a larger data-modeling task than this session's real dataset requires. Can be added later by inserting more ef_table/expected_matches rows — no schema change needed.
 - **docs/supabase-setup.md reconstruction**: Tool A's copy wasn't present in this repo at session start and Tool A's GitHub repo is outside this session's scope; rebuilt instead from a live Supabase MCP schema inspection (list_tables + pg_policies + sample data), which is ground-truth accurate.
-- **emissions_results re-run strategy** (not fully specified by the docs): Recalculate deletes+reinserts rows scoped to the activity rows in play, but preserves validation_status by re-matching (activity_data_ref, ef_ref) pairs from before the run — a re-click doesn't silently reset a reviewer's approved/flagged status. Stub (no-match/partial) rows always reset to pending since they represent a fresh-each-run gap.
+- **emissions_results re-run strategy, corrected mid-build**: the RLS design deliberately grants no anon DELETE on `emissions_results` (Hard Rule). Recalculate therefore reconciles via upsert — matching freshly computed rows against existing ones by `(activity_data_ref, ef_ref, scope, category, subcategory)`, updating in place when found and inserting when not — rather than delete+reinsert, which would have been blocked by RLS. A row's `validation_status` is preserved across recalculations since matched rows are updated, not replaced. Consequence: a result row whose underlying match stops applying (e.g. if `ef_table`/`expected_matches` changed) is never removed, since no delete path exists — documented limitation, not a bug, and not expected to occur mid-session since both reference tables are edit-only outside the app (D-7).
+- **Quality tag colors**: used the dataviz skill's fixed status palette (good/warning/serious/critical — never themed) bucketed across the 1–5 confidence_score range, with a colored dot + text label (not colored text) so it stays legible regardless of contrast on any given background.
+- **Acceptance criteria (product-spec.md Section 13) — status**: #2–#18 verified this session (seeding, match/fan-out/no-match/partial-match, result_tco2e and confidence_score arithmetic, filters, independent expand/collapse, quality tags, hover detail, validation_status cycling, RLS, forecast + suppressed-months banner, CSV completeness, PDF's five sections). #1/#19/#20 (live URL reachability, cross-device load, Netlify build) are open until the builder connects Netlify — see Remaining work.
 
 ## Known issues
 - activity_data_value_converted in Tool A still uses a placeholder conversion_factor (flat 1.0, status 'TBD') — every result_tco2e this tool calculates is unreliable until Tool A replaces it with real DEFRA 2024 values in a separate build session. Do not present calculated figures as final until this is resolved.
 - Not decided: whether Activity Data rows already persisted under the placeholder factor get recalculated once real factors land in Tool A, or only rows entered going forward (product-spec.md Section 15).
 - Grid Electricity (Scope 2 location/market-based multi-linkage example) has no ef_table rows yet — deferred, see Build decisions above.
+- **This sandbox's outbound network policy blocks direct browser/Node HTTPS access to the `purepastures` Supabase project host** (confirmed via the agent-proxy's own diagnostic endpoint: a 403 policy denial on `ztkgbowwrlszbbfuhkid.supabase.co`), even though the Supabase MCP tool itself (a separate, allowed channel) worked fine throughout for schema/data work. Consequence: the calculation engine, dashboard, and exports were verified thoroughly but not end-to-end against the live database — instead: (1) the pure match/fan-out/no-match/partial-match/unit-reconciliation/result_tco2e/confidence_score/forecast logic was unit-tested directly against the real seeded `ef_table` rows and the real 10 `activity_data` rows (30/30 checks passing, including hand-verified arithmetic); (2) the full UI (filters, expand/collapse, quality tags, hover detail, validation_status cycling, forecast banner) and both exports were verified by mocking the Supabase REST responses at the network layer with the same real data shapes, and screenshotting/inspecting the actual rendered output (this caught and fixed three real bugs: a CSV column-dropping bug in the forecast section, and two PDF bugs — invisible white-on-dark table headers and a clipped chart label). A live click-through against the actual database is still recommended once deployed or once that network path is available — see Remaining work.
+- `npm run build` succeeds with a "chunk larger than 500kB" warning (mostly jsPDF) — not addressed, since this is an internal dashboard tool where a code-split wouldn't meaningfully change the experience.
 
 ## Notes for next session
-None — this session is still in progress; continuing straight through to the frontend build.
+None — this session's build is complete. Next session (whenever it happens) should
+start with the live click-through described in Remaining work, then proceed to
+deploy.

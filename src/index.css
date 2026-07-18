@@ -1,0 +1,83 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+
+  --color-deep-blue: #141a32;
+  --color-lime: #c0fa00;
+  --color-off-white: #fafafa;
+  --color-ink: #1f2333;
+  --color-slate: #5b6072;
+  --color-line: #e6e7ec;
+
+  /* Fixed status palette (never themed) — dataviz skill references/palette.md */
+  --color-good: #0ca30c;
+  --color-warning: #fab219;
+  --color-serious: #ec835a;
+  --color-critical: #d03b3b;
+}
+
+body {
+  background-color: var(--color-off-white);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.card {
+  background-color: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(20, 26, 50, 0.06), 0 1px 2px rgba(20, 26, 50, 0.04);
+}
+
+.btn-primary {
+  background-color: var(--color-deep-blue);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  transition: opacity 0.15s ease;
+}
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #fff;
+  color: var(--color-deep-blue);
+  font-weight: 600;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  transition: background-color 0.15s ease;
+}
+.btn-secondary:hover {
+  background-color: var(--color-off-white);
+}
+
+.field-input {
+  background-color: #fff;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  color: var(--color-ink);
+}
+.field-input:focus {
+  outline: none;
+  border-color: var(--color-deep-blue);
+  box-shadow: 0 0 0 2px rgba(20, 26, 50, 0.15);
+}
+
+.badge-accent {
+  background-color: var(--color-lime);
+  color: var(--color-deep-blue);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.75rem;
+}
